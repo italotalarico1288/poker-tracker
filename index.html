@@ -3,327 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Poker Rebuild Tracker 2026</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .app-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 36px;
-            color: #1e3c72;
-            margin-bottom: 10px;
-        }
-        
-        .header .mission {
-            font-size: 18px;
-            color: #c00000;
-            font-weight: bold;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        
-        .card-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1e3c72;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .stat-large {
-            font-size: 48px;
-            font-weight: bold;
-            color: #1e3c72;
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 30px;
-            background: #e0e0e0;
-            border-radius: 15px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4ecdc4 0%, #44a08d 100%);
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .milestone-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            margin: 5px 0;
-            background: #f5f5f5;
-            border-radius: 8px;
-        }
-        
-        .milestone-item.achieved {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: #1e3c72;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2a5298;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .btn-full {
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .form-group {
-            margin: 15px 0;
-        }
-        
-        .form-label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #1e3c72;
-        }
-        
-        .form-textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-        
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 2px solid #ffc107;
-        }
-        
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 2px solid #dc3545;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 2px solid #28a745;
-        }
-        
-        .checklist {
-            list-style: none;
-        }
-        
-        .checklist-item {
-            padding: 12px;
-            margin: 8px 0;
-            background: #f5f5f5;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .checklist-item:hover {
-            background: #e0e0e0;
-        }
-        
-        .checklist-item.checked {
-            background: #d4edda;
-        }
-        
-        .checkbox {
-            width: 24px;
-            height: 24px;
-            border: 2px solid #1e3c72;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .session-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .session-item {
-            padding: 15px;
-            margin: 10px 0;
-            background: #f5f5f5;
-            border-radius: 8px;
-            border-left: 4px solid #1e3c72;
-        }
-        
-        .session-item.profit {
-            border-left-color: #28a745;
-        }
-        
-        .session-item.loss {
-            border-left-color: #dc3545;
-        }
-        
-        .session-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .session-details {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .tab {
-            padding: 12px 24px;
-            background: rgba(255,255,255,0.3);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        
-        .tab.active {
-            background: white;
-            color: #1e3c72;
-        }
-        
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .metric-label {
-            color: #666;
-        }
-        
-        .metric-value {
-            font-weight: bold;
-            color: #1e3c72;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; padding: 10px; }
+        .app-container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); text-align: center; }
+        .header h1 { font-size: clamp(24px, 5vw, 36px); color: #1e3c72; margin-bottom: 8px; }
+        .header .mission { font-size: clamp(14px, 3vw, 18px); color: #c00000; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .card-title { font-size: clamp(16px, 4vw, 20px); font-weight: bold; color: #1e3c72; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .stat-large { font-size: clamp(36px, 8vw, 48px); font-weight: bold; color: #1e3c72; text-align: center; margin: 15px 0; }
+        .stat-label { font-size: clamp(12px, 2.5vw, 14px); color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .progress-bar { width: 100%; height: 30px; background: #e0e0e0; border-radius: 15px; overflow: hidden; margin: 15px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4ecdc4 0%, #44a08d 100%); transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .milestone-item { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; }
+        .milestone-item.achieved { background: #d4edda; color: #155724; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: clamp(14px, 3vw, 16px); font-weight: bold; cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
+        .btn-primary { background: #1e3c72; color: white; }
+        .btn-primary:hover { background: #2a5298; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-full { width: 100%; margin-top: 10px; }
+        .form-group { margin: 15px 0; }
+        .form-label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #1e3c72; }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .alert { padding: 15px; border-radius: 8px; margin: 15px 0; font-weight: bold; }
+        .alert-warning { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+        .alert-success { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border: 2px solid #17a2b8; }
+        .checklist { list-style: none; }
+        .checklist-item { padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+        .checklist-item.checked { background: #d4edda; }
+        .checkbox { min-width: 28px; height: 28px; border: 2px solid #1e3c72; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .session-list { max-height: 500px; overflow-y: auto; }
+        .session-item { padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #1e3c72; }
+        .session-item.profit { border-left-color: #28a745; }
+        .session-item.loss { border-left-color: #dc3545; }
+        .session-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+        .session-details { font-size: 14px; color: #666; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab { padding: 12px 20px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; white-space: nowrap; }
+        .tab.active { background: white; color: #1e3c72; }
+        .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+        .metric-label { color: #666; }
+        .metric-value { font-weight: bold; color: #1e3c72; }
+        .file-input { display: none; }
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .header { padding: 15px; margin-bottom: 10px; }
+            .card { padding: 15px; }
+            .grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         function PokerTracker() {
-            // State
             const [currentTab, setCurrentTab] = useState('dashboard');
             const [bankroll, setBankroll] = useState(518);
             const [daysClean, setDaysClean] = useState(30);
@@ -331,22 +80,13 @@
             const [todayTotal, setTodayTotal] = useState(0);
             const [weeklyTotal, setWeeklyTotal] = useState(0);
             const [checklistAnswers, setChecklistAnswers] = useState({
-                rested: false,
-                calm: false,
-                noBetting: false,
-                canWalk: false
+                rested: false, calm: false, noBetting: false, canWalk: false
             });
-            
-            // Session form
             const [sessionForm, setSessionForm] = useState({
-                platform: 'CoinPoker',
-                stakes: 'NL5',
-                hours: '',
-                profitLoss: '',
-                notes: ''
+                platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: ''
             });
+            const fileInputRef = useRef(null);
 
-            // Load data from localStorage on mount
             useEffect(() => {
                 const saved = localStorage.getItem('pokerTrackerData');
                 if (saved) {
@@ -357,44 +97,31 @@
                 }
             }, []);
 
-            // Save data to localStorage whenever it changes
             useEffect(() => {
-                localStorage.setItem('pokerTrackerData', JSON.stringify({
-                    bankroll,
-                    daysClean,
-                    sessions
-                }));
+                localStorage.setItem('pokerTrackerData', JSON.stringify({ bankroll, daysClean, sessions }));
             }, [bankroll, daysClean, sessions]);
 
-            // Calculate today's total
             useEffect(() => {
                 const today = new Date().toDateString();
                 const todaySessions = sessions.filter(s => new Date(s.date).toDateString() === today);
-                const total = todaySessions.reduce((sum, s) => sum + parseFloat(s.profitLoss), 0);
-                setTodayTotal(total);
+                setTodayTotal(todaySessions.reduce((sum, s) => sum + parseFloat(s.profitLoss), 0));
             }, [sessions]);
 
-            // Calculate weekly total
             useEffect(() => {
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 const weekSessions = sessions.filter(s => new Date(s.date) >= weekAgo);
-                const total = weekSessions.reduce((sum, s) => sum + parseFloat(s.profitLoss), 0);
-                setWeeklyTotal(total);
+                setWeeklyTotal(weekSessions.reduce((sum, s) => sum + parseFloat(s.profitLoss), 0));
             }, [sessions]);
 
-            // Handlers
             const handleChecklistToggle = (key) => {
                 setChecklistAnswers(prev => ({ ...prev, [key]: !prev[key] }));
             };
 
-            const canStartSession = () => {
-                return Object.values(checklistAnswers).every(v => v === true);
-            };
+            const canStartSession = () => Object.values(checklistAnswers).every(v => v === true);
 
             const handleSessionSubmit = (e) => {
                 e.preventDefault();
-                
                 const profitLoss = parseFloat(sessionForm.profitLoss);
                 const newSession = {
                     id: Date.now(),
@@ -403,108 +130,139 @@
                     profitLoss: profitLoss,
                     hours: parseFloat(sessionForm.hours)
                 };
-                
                 setSessions(prev => [newSession, ...prev]);
                 setBankroll(prev => prev + profitLoss);
-                
-                // Reset form
-                setSessionForm({
-                    platform: 'CoinPoker',
-                    stakes: 'NL5',
-                    hours: '',
-                    profitLoss: '',
-                    notes: ''
-                });
-                
-                // Reset checklist
-                setChecklistAnswers({
-                    rested: false,
-                    calm: false,
-                    noBetting: false,
-                    canWalk: false
-                });
-                
+                setSessionForm({ platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: '' });
+                setChecklistAnswers({ rested: false, calm: false, noBetting: false, canWalk: false });
                 setCurrentTab('dashboard');
             };
 
-            const incrementDaysClean = () => {
-                setDaysClean(prev => prev + 1);
-            };
-
+            const incrementDaysClean = () => setDaysClean(prev => prev + 1);
             const resetDaysClean = () => {
-                if (window.confirm('Are you sure you want to reset days clean? This should only be done if you gambled on sports/casino.')) {
-                    setDaysClean(0);
-                }
+                if (window.confirm('Are you sure you want to reset days clean?')) setDaysClean(0);
             };
 
-            // Milestone calculations
+            // Export functions
+            const exportToCSV = () => {
+                const headers = ['Date', 'Platform', 'Stakes', 'Hours', 'Profit/Loss', 'Notes'];
+                const rows = sessions.map(s => [
+                    new Date(s.date).toLocaleString(),
+                    s.platform,
+                    s.stakes,
+                    s.hours,
+                    s.profitLoss,
+                    s.notes || ''
+                ]);
+                const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `poker_sessions_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+            };
+
+            const exportToExcel = () => {
+                const ws_data = [
+                    ['Poker Rebuild Tracker - Session History'],
+                    ['Exported: ' + new Date().toLocaleString()],
+                    [],
+                    ['Date', 'Platform', 'Stakes', 'Hours', 'Profit/Loss', 'Notes'],
+                    ...sessions.map(s => [
+                        new Date(s.date).toLocaleString(),
+                        s.platform,
+                        s.stakes,
+                        s.hours,
+                        s.profitLoss,
+                        s.notes || ''
+                    ]),
+                    [],
+                    ['Summary'],
+                    ['Total Sessions', sessions.length],
+                    ['Current Bankroll', bankroll],
+                    ['Days Clean', daysClean],
+                    ['Total Profit/Loss', sessions.reduce((sum, s) => sum + s.profitLoss, 0).toFixed(2)]
+                ];
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Sessions');
+                XLSX.writeFile(wb, `poker_tracker_${new Date().toISOString().split('T')[0]}.xlsx`);
+            };
+
+            const exportBackup = () => {
+                const data = { bankroll, daysClean, sessions, exportDate: new Date().toISOString() };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `poker_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            };
+
+            const importData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (window.confirm(`Import ${data.sessions?.length || 0} sessions? This will replace your current data.`)) {
+                            setBankroll(data.bankroll || 518);
+                            setDaysClean(data.daysClean || 0);
+                            setSessions(data.sessions || []);
+                            alert('Data imported successfully!');
+                        }
+                    } catch (err) {
+                        alert('Error importing file. Make sure it\'s a valid backup file.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
             const milestones = [
                 { name: 'Checkpoint 1', target: 750 },
                 { name: 'DOUBLE', target: 1036 },
                 { name: 'TRIPLE', target: 1554 }
             ];
-
             const progressPercent = ((bankroll - 518) / (1554 - 518)) * 100;
 
-            // Alerts
             const getAlerts = () => {
                 const alerts = [];
-                if (todayTotal <= -20) {
-                    alerts.push({ type: 'danger', message: '🛑 STOP-LOSS HIT! -$20 daily limit reached. STOP PLAYING.' });
-                } else if (todayTotal <= -15) {
-                    alerts.push({ type: 'warning', message: '⚠️ WARNING: You\'re at -$15. Only $5 away from stop-loss!' });
-                }
-                
-                if (todayTotal >= 50) {
-                    alerts.push({ type: 'success', message: '🎉 WIN GOAL HIT! +$50 achieved. Lock your profit and quit!' });
-                } else if (todayTotal >= 40) {
-                    alerts.push({ type: 'warning', message: '⚠️ Close to win goal! At +$40. Consider quitting soon.' });
-                }
-                
+                if (todayTotal <= -20) alerts.push({ type: 'danger', message: '🛑 STOP-LOSS HIT! -$20 daily limit reached. STOP PLAYING.' });
+                else if (todayTotal <= -15) alerts.push({ type: 'warning', message: '⚠️ WARNING: You\'re at -$15. Only $5 away from stop-loss!' });
+                if (todayTotal >= 50) alerts.push({ type: 'success', message: '🎉 WIN GOAL HIT! +$50 achieved. Lock your profit and quit!' });
+                else if (todayTotal >= 40) alerts.push({ type: 'warning', message: '⚠️ Close to win goal! At +$40. Consider quitting soon.' });
                 return alerts;
             };
 
-            // Render functions
             const renderDashboard = () => (
                 <>
                     {getAlerts().map((alert, i) => (
-                        <div key={i} className={`alert alert-${alert.type}`}>
-                            {alert.message}
-                        </div>
+                        <div key={i} className={`alert alert-${alert.type}`}>{alert.message}</div>
                     ))}
-                    
                     <div className="grid">
                         <div className="card">
                             <div className="card-title">💰 Current Bankroll</div>
                             <div className="stat-large">${bankroll.toFixed(2)}</div>
                             <div className="stat-label">Started: $518</div>
                         </div>
-                        
                         <div className="card">
                             <div className="card-title">🔥 Days Clean</div>
                             <div className="stat-large">{daysClean}</div>
                             <div className="stat-label">No sports/casino betting</div>
-                            <button className="btn btn-success btn-full" onClick={incrementDaysClean}>
-                                +1 Day Clean
-                            </button>
-                            <button className="btn btn-danger btn-full" onClick={resetDaysClean}>
-                                Reset (Relapse)
-                            </button>
+                            <button className="btn btn-success btn-full" onClick={incrementDaysClean}>+1 Day Clean</button>
+                            <button className="btn btn-danger btn-full" onClick={resetDaysClean}>Reset (Relapse)</button>
                         </div>
-                        
                         <div className="card">
                             <div className="card-title">📊 Today's P/L</div>
                             <div className="stat-large" style={{color: todayTotal >= 0 ? '#28a745' : '#dc3545'}}>
-                                {todayTotal >= 0 ? '+' : ''}{todayTotal.toFixed(2)}
+                                ${todayTotal >= 0 ? '+' : ''}{todayTotal.toFixed(2)}
                             </div>
                             <div className="stat-label">
-                                {todayTotal <= -20 ? '🛑 STOP-LOSS HIT' : 
-                                 todayTotal >= 50 ? '🎉 WIN GOAL HIT' :
-                                 `${20 - Math.abs(todayTotal)} to stop-loss`}
+                                {todayTotal <= -20 ? '🛑 STOP-LOSS HIT' : todayTotal >= 50 ? '🎉 WIN GOAL HIT' : `$${Math.abs(20 + todayTotal).toFixed(2)} to stop-loss`}
                             </div>
                         </div>
                     </div>
-                    
                     <div className="card">
                         <div className="card-title">🏆 Milestone Progress</div>
                         <div className="progress-bar">
@@ -519,13 +277,12 @@
                             </div>
                         ))}
                     </div>
-                    
                     <div className="card">
                         <div className="card-title">📈 Weekly Stats</div>
                         <div className="metric-row">
                             <span className="metric-label">This Week P/L:</span>
                             <span className="metric-value" style={{color: weeklyTotal >= 0 ? '#28a745' : '#dc3545'}}>
-                                {weeklyTotal >= 0 ? '+' : ''}{weeklyTotal.toFixed(2)}
+                                ${weeklyTotal >= 0 ? '+' : ''}{weeklyTotal.toFixed(2)}
                             </span>
                         </div>
                         <div className="metric-row">
@@ -534,11 +291,7 @@
                         </div>
                         <div className="metric-row">
                             <span className="metric-label">Sessions this week:</span>
-                            <span className="metric-value">{sessions.filter(s => {
-                                const weekAgo = new Date();
-                                weekAgo.setDate(weekAgo.getDate() - 7);
-                                return new Date(s.date) >= weekAgo;
-                            }).length}</span>
+                            <span className="metric-value">{sessions.filter(s => new Date(s.date) >= new Date(Date.now() - 7*24*60*60*1000)).length}</span>
                         </div>
                     </div>
                 </>
@@ -547,53 +300,25 @@
             const renderChecklist = () => (
                 <div className="card">
                     <div className="card-title">✅ Before Session Checklist</div>
-                    <p style={{marginBottom: '20px', color: '#666'}}>
-                        Answer all questions honestly. You must answer YES to all to start playing.
-                    </p>
-                    
+                    <p style={{marginBottom: '20px', color: '#666'}}>Answer all questions honestly. You must answer YES to all to start playing.</p>
                     <ul className="checklist">
-                        <li 
-                            className={`checklist-item ${checklistAnswers.rested ? 'checked' : ''}`}
-                            onClick={() => handleChecklistToggle('rested')}
-                        >
-                            <div className="checkbox">{checklistAnswers.rested && '✓'}</div>
-                            <span>Am I well-rested?</span>
-                        </li>
-                        <li 
-                            className={`checklist-item ${checklistAnswers.calm ? 'checked' : ''}`}
-                            onClick={() => handleChecklistToggle('calm')}
-                        >
-                            <div className="checkbox">{checklistAnswers.calm && '✓'}</div>
-                            <span>Am I emotionally calm?</span>
-                        </li>
-                        <li 
-                            className={`checklist-item ${checklistAnswers.noBetting ? 'checked' : ''}`}
-                            onClick={() => handleChecklistToggle('noBetting')}
-                        >
-                            <div className="checkbox">{checklistAnswers.noBetting && '✓'}</div>
-                            <span>Have I NOT thought about sports betting today?</span>
-                        </li>
-                        <li 
-                            className={`checklist-item ${checklistAnswers.canWalk ? 'checked' : ''}`}
-                            onClick={() => handleChecklistToggle('canWalk')}
-                        >
-                            <div className="checkbox">{checklistAnswers.canWalk && '✓'}</div>
-                            <span>Can I lose $15 and walk away?</span>
-                        </li>
+                        {Object.entries({
+                            rested: 'Am I well-rested?',
+                            calm: 'Am I emotionally calm?',
+                            noBetting: 'Have I NOT thought about sports betting today?',
+                            canWalk: 'Can I lose $15 and walk away?'
+                        }).map(([key, text]) => (
+                            <li key={key} className={`checklist-item ${checklistAnswers[key] ? 'checked' : ''}`} onClick={() => handleChecklistToggle(key)}>
+                                <div className="checkbox">{checklistAnswers[key] && '✓'}</div>
+                                <span>{text}</span>
+                            </li>
+                        ))}
                     </ul>
-                    
                     {!canStartSession() && (
-                        <div className="alert alert-danger">
-                            ❌ You answered NO to at least one question. DO NOT PLAY TODAY.
-                        </div>
+                        <div className="alert alert-danger">❌ You answered NO to at least one question. DO NOT PLAY TODAY.</div>
                     )}
-                    
                     {canStartSession() && (
-                        <div className="alert alert-success">
-                            ✅ All checks passed! You're cleared to play. Remember the rules:
-                            <br/>• Stop at -$20
-                            <br/>• Stop at +$50
-                        </div>
+                        <div className="alert alert-success">✅ All checks passed! You're cleared to play. Remember: Stop at -$20, Stop at +$50</div>
                     )}
                 </div>
             );
@@ -601,87 +326,47 @@
             const renderLogSession = () => (
                 <div className="card">
                     <div className="card-title">📝 Log Session</div>
-                    
                     {sessionForm.stakes === 'NL10' && bankroll < 1036 && (
                         <div className="alert alert-warning">
                             ⚠️ NL10 GOAL STATUS:<br/>
                             • Current Bankroll: ${bankroll.toFixed(2)}<br/>
                             • Recommended for NL10: $1,036+ (DOUBLED)<br/>
-                            • You're ${(1036 - bankroll).toFixed(2)} away from recommended bankroll<br/>
-                            <strong>NL10 is your goal, but stay at NL2/NL5 until you DOUBLE your bankroll.</strong>
+                            • You're ${(1036 - bankroll).toFixed(2)} away<br/>
+                            <strong>NL10 is your goal, but stay at NL2/NL5 until you DOUBLE.</strong>
                         </div>
                     )}
-                    
                     {sessionForm.stakes === 'NL10' && bankroll >= 1036 && (
-                        <div className="alert alert-success">
-                            ✅ BANKROLL DOUBLED! You're ready to test NL10. Play disciplined!
-                        </div>
+                        <div className="alert alert-success">✅ BANKROLL DOUBLED! You're ready to test NL10. Play disciplined!</div>
                     )}
-                    
                     <form onSubmit={handleSessionSubmit}>
                         <div className="form-group">
                             <label className="form-label">Platform</label>
-                            <select 
-                                className="form-select"
-                                value={sessionForm.platform}
-                                onChange={(e) => setSessionForm({...sessionForm, platform: e.target.value})}
-                            >
+                            <select className="form-select" value={sessionForm.platform} onChange={(e) => setSessionForm({...sessionForm, platform: e.target.value})}>
                                 <option value="CoinPoker">CoinPoker</option>
                                 <option value="ClubWPT">ClubWPT</option>
                             </select>
                         </div>
-                        
                         <div className="form-group">
                             <label className="form-label">Stakes</label>
-                            <select 
-                                className="form-select"
-                                value={sessionForm.stakes}
-                                onChange={(e) => setSessionForm({...sessionForm, stakes: e.target.value})}
-                            >
+                            <select className="form-select" value={sessionForm.stakes} onChange={(e) => setSessionForm({...sessionForm, stakes: e.target.value})}>
                                 <option value="NL2">NL2</option>
                                 <option value="NL5">NL5</option>
                                 <option value="NL10">NL10 🎯</option>
                             </select>
                         </div>
-                        
                         <div className="form-group">
                             <label className="form-label">Hours Played</label>
-                            <input 
-                                type="number" 
-                                step="0.25"
-                                className="form-input"
-                                value={sessionForm.hours}
-                                onChange={(e) => setSessionForm({...sessionForm, hours: e.target.value})}
-                                required
-                            />
+                            <input type="number" step="0.25" className="form-input" value={sessionForm.hours} onChange={(e) => setSessionForm({...sessionForm, hours: e.target.value})} required />
                         </div>
-                        
                         <div className="form-group">
                             <label className="form-label">Profit/Loss ($)</label>
-                            <input 
-                                type="number" 
-                                step="0.01"
-                                className="form-input"
-                                value={sessionForm.profitLoss}
-                                onChange={(e) => setSessionForm({...sessionForm, profitLoss: e.target.value})}
-                                required
-                                placeholder="-15.50 or +25.00"
-                            />
+                            <input type="number" step="0.01" className="form-input" value={sessionForm.profitLoss} onChange={(e) => setSessionForm({...sessionForm, profitLoss: e.target.value})} required placeholder="-15.50 or +25.00" />
                         </div>
-                        
                         <div className="form-group">
                             <label className="form-label">Notes (Optional)</label>
-                            <textarea 
-                                className="form-textarea"
-                                value={sessionForm.notes}
-                                onChange={(e) => setSessionForm({...sessionForm, notes: e.target.value})}
-                                placeholder="Key hands, leaks, observations..."
-                            />
+                            <textarea className="form-textarea" value={sessionForm.notes} onChange={(e) => setSessionForm({...sessionForm, notes: e.target.value})} placeholder="Key hands, leaks, observations..." />
                         </div>
-                        
-                        <button type="submit" className="btn btn-primary btn-full">
-                            Log Session
-                        </button>
+                        <button type="submit" className="btn btn-primary btn-full">Log Session</button>
                     </form>
                 </div>
             );
@@ -690,34 +375,82 @@
                 <div className="card">
                     <div className="card-title">📜 Session History</div>
                     {sessions.length === 0 ? (
-                        <p style={{textAlign: 'center', color: '#666', padding: '40px'}}>
-                            No sessions logged yet. Start playing and log your first session!
-                        </p>
+                        <p style={{textAlign: 'center', color: '#666', padding: '40px'}}>No sessions logged yet. Start playing and log your first session!</p>
                     ) : (
                         <div className="session-list">
                             {sessions.map(session => (
-                                <div 
-                                    key={session.id} 
-                                    className={`session-item ${session.profitLoss >= 0 ? 'profit' : 'loss'}`}
-                                >
+                                <div key={session.id} className={`session-item ${session.profitLoss >= 0 ? 'profit' : 'loss'}`}>
                                     <div className="session-header">
                                         <span>{session.platform} {session.stakes}</span>
                                         <span style={{color: session.profitLoss >= 0 ? '#28a745' : '#dc3545'}}>
-                                            {session.profitLoss >= 0 ? '+' : ''}{session.profitLoss.toFixed(2)}
+                                            ${session.profitLoss >= 0 ? '+' : ''}{session.profitLoss.toFixed(2)}
                                         </span>
                                     </div>
                                     <div className="session-details">
                                         {new Date(session.date).toLocaleString()} • {session.hours}h
-                                        {session.notes && (
-                                            <div style={{marginTop: '8px', fontStyle: 'italic'}}>
-                                                {session.notes}
-                                            </div>
-                                        )}
+                                        {session.notes && <div style={{marginTop: '8px', fontStyle: 'italic'}}>{session.notes}</div>}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
+                </div>
+            );
+
+            const renderExport = () => (
+                <div className="card">
+                    <div className="card-title">📤 Export/Import Data</div>
+                    <p style={{marginBottom: '20px', color: '#666'}}>
+                        Export your sessions to Excel, CSV, or backup file. Import to restore or transfer data between devices.
+                    </p>
+                    
+                    <div className="alert alert-info">
+                        📊 Total Sessions: {sessions.length}<br/>
+                        💰 Current Bankroll: ${bankroll.toFixed(2)}<br/>
+                        🔥 Days Clean: {daysClean}
+                    </div>
+
+                    <h3 style={{marginTop: '20px', marginBottom: '10px', color: '#1e3c72'}}>📥 Export Options</h3>
+                    
+                    <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={sessions.length === 0}>
+                        📄 Export to CSV (Excel Compatible)
+                    </button>
+                    
+                    <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={sessions.length === 0}>
+                        📊 Export to Excel (XLSX)
+                    </button>
+                    
+                    <button className="btn btn-success btn-full" onClick={exportBackup}>
+                        💾 Export Complete Backup (JSON)
+                    </button>
+
+                    <h3 style={{marginTop: '30px', marginBottom: '10px', color: '#1e3c72'}}>📤 Import Data</h3>
+                    
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="file-input"
+                        accept=".json"
+                        onChange={importData}
+                    />
+                    
+                    <button className="btn btn-primary btn-full" onClick={() => fileInputRef.current.click()}>
+                        📁 Import from Backup File
+                    </button>
+
+                    {sessions.length === 0 && (
+                        <div className="alert alert-warning" style={{marginTop: '20px'}}>
+                            ⚠️ No sessions to export yet. Log some sessions first!
+                        </div>
+                    )}
+
+                    <div style={{marginTop: '30px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', fontSize: '14px', color: '#666'}}>
+                        <strong>💡 Tips:</strong><br/>
+                        • CSV files open in Excel, Numbers, Google Sheets<br/>
+                        • XLSX files are native Excel format with formatting<br/>
+                        • JSON backups preserve all data for re-importing<br/>
+                        • Use import to transfer data between devices
+                    </div>
                 </div>
             );
 
@@ -727,38 +460,18 @@
                         <h1>🎯 Poker Rebuild Tracker</h1>
                         <div className="mission">THE TRIPLE-UP MISSION</div>
                     </div>
-                    
                     <div className="tabs">
-                        <button 
-                            className={`tab ${currentTab === 'dashboard' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('dashboard')}
-                        >
-                            Dashboard
-                        </button>
-                        <button 
-                            className={`tab ${currentTab === 'checklist' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('checklist')}
-                        >
-                            Pre-Session Check
-                        </button>
-                        <button 
-                            className={`tab ${currentTab === 'log' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('log')}
-                        >
-                            Log Session
-                        </button>
-                        <button 
-                            className={`tab ${currentTab === 'history' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('history')}
-                        >
-                            History
-                        </button>
+                        <button className={`tab ${currentTab === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentTab('dashboard')}>Dashboard</button>
+                        <button className={`tab ${currentTab === 'checklist' ? 'active' : ''}`} onClick={() => setCurrentTab('checklist')}>Pre-Check</button>
+                        <button className={`tab ${currentTab === 'log' ? 'active' : ''}`} onClick={() => setCurrentTab('log')}>Log Session</button>
+                        <button className={`tab ${currentTab === 'history' ? 'active' : ''}`} onClick={() => setCurrentTab('history')}>History</button>
+                        <button className={`tab ${currentTab === 'export' ? 'active' : ''}`} onClick={() => setCurrentTab('export')}>Export</button>
                     </div>
-                    
                     {currentTab === 'dashboard' && renderDashboard()}
                     {currentTab === 'checklist' && renderChecklist()}
                     {currentTab === 'log' && renderLogSession()}
                     {currentTab === 'history' && renderHistory()}
+                    {currentTab === 'export' && renderExport()}
                 </div>
             );
         }
