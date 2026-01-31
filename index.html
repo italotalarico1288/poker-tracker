@@ -10,6 +10,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; padding: 10px; }
@@ -19,16 +20,15 @@
         .header .mission { font-size: clamp(14px, 3vw, 18px); color: #c00000; font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; }
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-        .card-title { font-size: clamp(16px, 4vw, 20px); font-weight: bold; color: #1e3c72; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .card-title { font-size: clamp(16px, 4vw, 20px); font-weight: bold; color: #1e3c72; margin-bottom: 15px; }
         .stat-large { font-size: clamp(36px, 8vw, 48px); font-weight: bold; color: #1e3c72; text-align: center; margin: 15px 0; }
         .stat-label { font-size: clamp(12px, 2.5vw, 14px); color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         .progress-bar { width: 100%; height: 30px; background: #e0e0e0; border-radius: 15px; overflow: hidden; margin: 15px 0; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #4ecdc4 0%, #44a08d 100%); transition: width 0.3s ease; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .milestone-item { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; }
         .milestone-item.achieved { background: #d4edda; color: #155724; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: clamp(14px, 3vw, 16px); font-weight: bold; cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-size: clamp(14px, 3vw, 16px); font-weight: bold; cursor: pointer; transition: all 0.2s; }
         .btn-primary { background: #1e3c72; color: white; }
-        .btn-primary:hover { background: #2a5298; }
         .btn-success { background: #28a745; color: white; }
         .btn-danger { background: #dc3545; color: white; }
         .btn-full { width: 100%; margin-top: 10px; }
@@ -43,27 +43,34 @@
         .alert-success { background: #d4edda; color: #155724; border: 2px solid #28a745; }
         .alert-info { background: #d1ecf1; color: #0c5460; border: 2px solid #17a2b8; }
         .checklist { list-style: none; }
-        .checklist-item { padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+        .checklist-item { padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .checklist-item.checked { background: #d4edda; }
         .checkbox { min-width: 28px; height: 28px; border: 2px solid #1e3c72; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .session-list { max-height: 500px; overflow-y: auto; }
         .session-item { padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #1e3c72; }
         .session-item.profit { border-left-color: #28a745; }
         .session-item.loss { border-left-color: #dc3545; }
-        .session-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; }
+        .session-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px; align-items: center; }
         .session-details { font-size: 14px; color: #666; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .tab { padding: 12px 20px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; white-space: nowrap; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab { padding: 10px 14px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; white-space: nowrap; font-size: clamp(11px, 2.5vw, 13px); }
         .tab.active { background: white; color: #1e3c72; }
         .metric-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
         .metric-label { color: #666; }
         .metric-value { font-weight: bold; color: #1e3c72; }
+        .stat-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 10px 0; }
+        .stat-box.positive { background: #d4edda; border-left: 4px solid #28a745; }
+        .stat-box.negative { background: #f8d7da; border-left: 4px solid #dc3545; }
+        .leak-item { background: #fff3cd; padding: 12px; margin: 8px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .leak-count { float: right; background: #ffc107; color: #856404; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
         .file-input { display: none; }
+        .chart-container { position: relative; height: 300px; margin: 20px 0; }
         @media (max-width: 768px) {
             body { padding: 5px; }
-            .header { padding: 15px; margin-bottom: 10px; }
+            .header { padding: 15px; }
             .card { padding: 15px; }
             .grid { grid-template-columns: 1fr; }
+            .chart-container { height: 250px; }
         }
     </style>
 </head>
@@ -83,9 +90,11 @@
                 rested: false, calm: false, noBetting: false, canWalk: false
             });
             const [sessionForm, setSessionForm] = useState({
-                platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: ''
+                platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: '', tables: '1', rating: 'B'
             });
             const fileInputRef = useRef(null);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
 
             useEffect(() => {
                 const saved = localStorage.getItem('pokerTrackerData');
@@ -114,11 +123,21 @@
                 setWeeklyTotal(weekSessions.reduce((sum, s) => sum + parseFloat(s.profitLoss), 0));
             }, [sessions]);
 
+            useEffect(() => {
+                if (currentTab === 'graph' && chartRef.current) {
+                    updateChart();
+                }
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                        chartInstance.current = null;
+                    }
+                };
+            }, [currentTab, sessions]);
+
             const handleChecklistToggle = (key) => {
                 setChecklistAnswers(prev => ({ ...prev, [key]: !prev[key] }));
             };
-
-            const canStartSession = () => Object.values(checklistAnswers).every(v => v === true);
 
             const handleSessionSubmit = (e) => {
                 e.preventDefault();
@@ -128,11 +147,13 @@
                     date: new Date().toISOString(),
                     ...sessionForm,
                     profitLoss: profitLoss,
-                    hours: parseFloat(sessionForm.hours)
+                    hours: parseFloat(sessionForm.hours),
+                    tables: parseInt(sessionForm.tables) || 1,
+                    rating: sessionForm.rating
                 };
                 setSessions(prev => [newSession, ...prev]);
                 setBankroll(prev => prev + profitLoss);
-                setSessionForm({ platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: '' });
+                setSessionForm({ platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: '', tables: '1', rating: 'B' });
                 setChecklistAnswers({ rested: false, calm: false, noBetting: false, canWalk: false });
                 setCurrentTab('dashboard');
             };
@@ -142,16 +163,145 @@
                 if (window.confirm('Are you sure you want to reset days clean?')) setDaysClean(0);
             };
 
-            // Export functions
+            const deleteSession = (sessionId, profitLoss) => {
+                if (window.confirm('Delete this session? This will adjust your bankroll.')) {
+                    setSessions(prev => prev.filter(s => s.id !== sessionId));
+                    setBankroll(prev => prev - profitLoss);
+                }
+            };
+
+            const updateChart = () => {
+                if (!chartRef.current) return;
+                
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+
+                const sortedSessions = [...sessions].reverse();
+                let runningBankroll = 518;
+                const data = [{x: new Date(Date.now() - 30*24*60*60*1000), y: 518}];
+                
+                sortedSessions.forEach(s => {
+                    runningBankroll += s.profitLoss;
+                    data.push({x: new Date(s.date), y: runningBankroll});
+                });
+
+                const ctx = chartRef.current.getContext('2d');
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: 'Bankroll',
+                            data: data,
+                            borderColor: '#1e3c72',
+                            backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { type: 'time', time: { unit: 'day' } },
+                            y: { 
+                                beginAtZero: false,
+                                ticks: { callback: (value) => '$' + value }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => 'Bankroll: $' + context.parsed.y.toFixed(2)
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const getStatsByPlatform = () => {
+                const platforms = {};
+                sessions.forEach(s => {
+                    if (!platforms[s.platform]) {
+                        platforms[s.platform] = { sessions: 0, hours: 0, profit: 0, hands: 0 };
+                    }
+                    platforms[s.platform].sessions++;
+                    platforms[s.platform].hours += s.hours;
+                    platforms[s.platform].profit += s.profitLoss;
+                    const handsPerHour = 60; // Average for online poker
+                    platforms[s.platform].hands += Math.round(s.hours * (s.tables || 1) * handsPerHour);
+                });
+                return Object.entries(platforms).map(([name, data]) => ({
+                    name,
+                    ...data,
+                    hourly: data.hours > 0 ? (data.profit / data.hours).toFixed(2) : 0
+                }));
+            };
+
+            const getStatsByStakes = () => {
+                const stakes = {};
+                sessions.forEach(s => {
+                    if (!stakes[s.stakes]) {
+                        stakes[s.stakes] = { sessions: 0, hours: 0, profit: 0, hands: 0 };
+                    }
+                    stakes[s.stakes].sessions++;
+                    stakes[s.stakes].hours += s.hours;
+                    stakes[s.stakes].profit += s.profitLoss;
+                    const handsPerHour = 60;
+                    stakes[s.stakes].hands += Math.round(s.hours * (s.tables || 1) * handsPerHour);
+                });
+                return Object.entries(stakes).map(([name, data]) => ({
+                    name,
+                    ...data,
+                    hourly: data.hours > 0 ? (data.profit / data.hours).toFixed(2) : 0
+                }));
+            };
+
+            const getStatsByRating = () => {
+                const ratings = {};
+                sessions.forEach(s => {
+                    const rating = s.rating || 'N/A';
+                    if (!ratings[rating]) {
+                        ratings[rating] = { sessions: 0, profit: 0, avgProfit: 0 };
+                    }
+                    ratings[rating].sessions++;
+                    ratings[rating].profit += s.profitLoss;
+                });
+                
+                const ratingsArray = Object.entries(ratings).map(([name, data]) => ({
+                    name,
+                    ...data,
+                    avgProfit: (data.profit / data.sessions).toFixed(2)
+                }));
+                
+                // Sort A-F
+                const order = { 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'F': 5, 'N/A': 6 };
+                return ratingsArray.sort((a, b) => (order[a.name] || 99) - (order[b.name] || 99));
+            };
+
+            const getLeaks = () => {
+                const leakWords = {};
+                const commonLeaks = ['tilt', 'tilted', 'call', 'calling', 'bluff', 'fold', 'river', 'bad beat', 
+                                     'cooler', 'ego', 'revenge', 'chasing', 'tired', 'overplayed', 'passive'];
+                sessions.forEach(s => {
+                    if (s.notes) {
+                        const notesLower = s.notes.toLowerCase();
+                        commonLeaks.forEach(leak => {
+                            if (notesLower.includes(leak)) {
+                                leakWords[leak] = (leakWords[leak] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                return Object.entries(leakWords).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            };
+
             const exportToCSV = () => {
-                const headers = ['Date', 'Platform', 'Stakes', 'Hours', 'Profit/Loss', 'Notes'];
+                const headers = ['Date', 'Platform', 'Stakes', 'Hours', 'Tables', 'Rating', 'Profit/Loss', 'Notes'];
                 const rows = sessions.map(s => [
-                    new Date(s.date).toLocaleString(),
-                    s.platform,
-                    s.stakes,
-                    s.hours,
-                    s.profitLoss,
-                    s.notes || ''
+                    new Date(s.date).toLocaleString(), s.platform, s.stakes, s.hours, s.tables || 1, s.rating || 'N/A', s.profitLoss, s.notes || ''
                 ]);
                 const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
@@ -167,21 +317,19 @@
                     ['Poker Rebuild Tracker - Session History'],
                     ['Exported: ' + new Date().toLocaleString()],
                     [],
-                    ['Date', 'Platform', 'Stakes', 'Hours', 'Profit/Loss', 'Notes'],
+                    ['Date', 'Platform', 'Stakes', 'Hours', 'Tables', 'Rating', 'Profit/Loss', 'Hands Est.', 'Notes'],
                     ...sessions.map(s => [
-                        new Date(s.date).toLocaleString(),
-                        s.platform,
-                        s.stakes,
-                        s.hours,
-                        s.profitLoss,
-                        s.notes || ''
+                        new Date(s.date).toLocaleString(), s.platform, s.stakes, s.hours, s.tables || 1, s.rating || 'N/A',
+                        s.profitLoss, Math.round(s.hours * (s.tables || 1) * 60), s.notes || ''
                     ]),
                     [],
                     ['Summary'],
                     ['Total Sessions', sessions.length],
                     ['Current Bankroll', bankroll],
                     ['Days Clean', daysClean],
-                    ['Total Profit/Loss', sessions.reduce((sum, s) => sum + s.profitLoss, 0).toFixed(2)]
+                    ['Total Profit/Loss', sessions.reduce((sum, s) => sum + s.profitLoss, 0).toFixed(2)],
+                    ['Total Hours', sessions.reduce((sum, s) => sum + s.hours, 0).toFixed(1)],
+                    ['Est. Total Hands', sessions.reduce((sum, s) => sum + Math.round(s.hours * (s.tables || 1) * 60), 0)]
                 ];
                 const ws = XLSX.utils.aoa_to_sheet(ws_data);
                 const wb = XLSX.utils.book_new();
@@ -206,14 +354,14 @@
                 reader.onload = (event) => {
                     try {
                         const data = JSON.parse(event.target.result);
-                        if (window.confirm(`Import ${data.sessions?.length || 0} sessions? This will replace your current data.`)) {
+                        if (window.confirm(`Import ${data.sessions?.length || 0} sessions?`)) {
                             setBankroll(data.bankroll || 518);
                             setDaysClean(data.daysClean || 0);
                             setSessions(data.sessions || []);
                             alert('Data imported successfully!');
                         }
                     } catch (err) {
-                        alert('Error importing file. Make sure it\'s a valid backup file.');
+                        alert('Error importing file.');
                     }
                 };
                 reader.readAsText(file);
@@ -228,12 +376,16 @@
 
             const getAlerts = () => {
                 const alerts = [];
-                if (todayTotal <= -20) alerts.push({ type: 'danger', message: '🛑 STOP-LOSS HIT! -$20 daily limit reached. STOP PLAYING.' });
-                else if (todayTotal <= -15) alerts.push({ type: 'warning', message: '⚠️ WARNING: You\'re at -$15. Only $5 away from stop-loss!' });
-                if (todayTotal >= 50) alerts.push({ type: 'success', message: '🎉 WIN GOAL HIT! +$50 achieved. Lock your profit and quit!' });
-                else if (todayTotal >= 40) alerts.push({ type: 'warning', message: '⚠️ Close to win goal! At +$40. Consider quitting soon.' });
+                if (todayTotal <= -20) alerts.push({ type: 'danger', message: '🛑 STOP-LOSS HIT! -$20 limit reached. STOP PLAYING.' });
+                else if (todayTotal <= -15) alerts.push({ type: 'warning', message: '⚠️ WARNING: At -$15. Only $5 to stop-loss!' });
+                if (todayTotal >= 50) alerts.push({ type: 'success', message: '🎉 WIN GOAL HIT! +$50 achieved. Lock profit and quit!' });
+                else if (todayTotal >= 40) alerts.push({ type: 'warning', message: '⚠️ Close to win goal! At +$40.' });
                 return alerts;
             };
+
+            const totalHands = sessions.reduce((sum, s) => sum + Math.round(s.hours * (s.tables || 1) * 60), 0);
+            const totalHours = sessions.reduce((sum, s) => sum + s.hours, 0);
+            const totalProfit = sessions.reduce((sum, s) => sum + s.profitLoss, 0);
 
             const renderDashboard = () => (
                 <>
@@ -242,16 +394,16 @@
                     ))}
                     <div className="grid">
                         <div className="card">
-                            <div className="card-title">💰 Current Bankroll</div>
+                            <div className="card-title">💰 Bankroll</div>
                             <div className="stat-large">${bankroll.toFixed(2)}</div>
                             <div className="stat-label">Started: $518</div>
                         </div>
                         <div className="card">
                             <div className="card-title">🔥 Days Clean</div>
                             <div className="stat-large">{daysClean}</div>
-                            <div className="stat-label">No sports/casino betting</div>
+                            <div className="stat-label">No sports/casino</div>
                             <button className="btn btn-success btn-full" onClick={incrementDaysClean}>+1 Day Clean</button>
-                            <button className="btn btn-danger btn-full" onClick={resetDaysClean}>Reset (Relapse)</button>
+                            <button className="btn btn-danger btn-full" onClick={resetDaysClean}>Reset</button>
                         </div>
                         <div className="card">
                             <div className="card-title">📊 Today's P/L</div>
@@ -259,7 +411,7 @@
                                 ${todayTotal >= 0 ? '+' : ''}{todayTotal.toFixed(2)}
                             </div>
                             <div className="stat-label">
-                                {todayTotal <= -20 ? '🛑 STOP-LOSS HIT' : todayTotal >= 50 ? '🎉 WIN GOAL HIT' : `$${Math.abs(20 + todayTotal).toFixed(2)} to stop-loss`}
+                                {todayTotal <= -20 ? '🛑 STOP' : `$${Math.abs(20 + todayTotal).toFixed(2)} to stop`}
                             </div>
                         </div>
                     </div>
@@ -277,30 +429,13 @@
                             </div>
                         ))}
                     </div>
-                    <div className="card">
-                        <div className="card-title">📈 Weekly Stats</div>
-                        <div className="metric-row">
-                            <span className="metric-label">This Week P/L:</span>
-                            <span className="metric-value" style={{color: weeklyTotal >= 0 ? '#28a745' : '#dc3545'}}>
-                                ${weeklyTotal >= 0 ? '+' : ''}{weeklyTotal.toFixed(2)}
-                            </span>
-                        </div>
-                        <div className="metric-row">
-                            <span className="metric-label">Target:</span>
-                            <span className="metric-value">$68-85</span>
-                        </div>
-                        <div className="metric-row">
-                            <span className="metric-label">Sessions this week:</span>
-                            <span className="metric-value">{sessions.filter(s => new Date(s.date) >= new Date(Date.now() - 7*24*60*60*1000)).length}</span>
-                        </div>
-                    </div>
                 </>
             );
 
             const renderChecklist = () => (
                 <div className="card">
-                    <div className="card-title">✅ Before Session Checklist</div>
-                    <p style={{marginBottom: '20px', color: '#666'}}>Answer all questions honestly. You must answer YES to all to start playing.</p>
+                    <div className="card-title">✅ Pre-Session Check</div>
+                    <p style={{marginBottom: '20px', color: '#666'}}>Answer YES to all to start playing.</p>
                     <ul className="checklist">
                         {Object.entries({
                             rested: 'Am I well-rested?',
@@ -314,11 +449,11 @@
                             </li>
                         ))}
                     </ul>
-                    {!canStartSession() && (
-                        <div className="alert alert-danger">❌ You answered NO to at least one question. DO NOT PLAY TODAY.</div>
+                    {!Object.values(checklistAnswers).every(v => v) && (
+                        <div className="alert alert-danger">❌ You answered NO. DO NOT PLAY TODAY.</div>
                     )}
-                    {canStartSession() && (
-                        <div className="alert alert-success">✅ All checks passed! You're cleared to play. Remember: Stop at -$20, Stop at +$50</div>
+                    {Object.values(checklistAnswers).every(v => v) && (
+                        <div className="alert alert-success">✅ Cleared to play. Stop at -$20, Stop at +$50</div>
                     )}
                 </div>
             );
@@ -328,15 +463,12 @@
                     <div className="card-title">📝 Log Session</div>
                     {sessionForm.stakes === 'NL10' && bankroll < 1036 && (
                         <div className="alert alert-warning">
-                            ⚠️ NL10 GOAL STATUS:<br/>
-                            • Current Bankroll: ${bankroll.toFixed(2)}<br/>
-                            • Recommended for NL10: $1,036+ (DOUBLED)<br/>
-                            • You're ${(1036 - bankroll).toFixed(2)} away<br/>
-                            <strong>NL10 is your goal, but stay at NL2/NL5 until you DOUBLE.</strong>
+                            ⚠️ NL10 GOAL: Need $1,036 (DOUBLED). You're ${(1036 - bankroll).toFixed(2)} away.<br/>
+                            Stay at NL2/NL5 until you DOUBLE.
                         </div>
                     )}
                     {sessionForm.stakes === 'NL10' && bankroll >= 1036 && (
-                        <div className="alert alert-success">✅ BANKROLL DOUBLED! You're ready to test NL10. Play disciplined!</div>
+                        <div className="alert alert-success">✅ DOUBLED! Ready for NL10!</div>
                     )}
                     <form onSubmit={handleSessionSubmit}>
                         <div className="form-group">
@@ -359,12 +491,28 @@
                             <input type="number" step="0.25" className="form-input" value={sessionForm.hours} onChange={(e) => setSessionForm({...sessionForm, hours: e.target.value})} required />
                         </div>
                         <div className="form-group">
+                            <label className="form-label">Tables (for hand estimator)</label>
+                            <input type="number" min="1" max="20" className="form-input" value={sessionForm.tables} onChange={(e) => setSessionForm({...sessionForm, tables: e.target.value})} required />
+                            <small style={{color: '#666'}}>Helps estimate hands played (hrs × tables × 60 hands/hr)</small>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Session Rating (How well did you play?)</label>
+                            <select className="form-select" value={sessionForm.rating} onChange={(e) => setSessionForm({...sessionForm, rating: e.target.value})}>
+                                <option value="A">A - Excellent (Played my best)</option>
+                                <option value="B">B - Good (Solid poker)</option>
+                                <option value="C">C - Average (Some mistakes)</option>
+                                <option value="D">D - Poor (Many mistakes)</option>
+                                <option value="F">F - Terrible (Tilted/Bad decisions)</option>
+                            </select>
+                            <small style={{color: '#666'}}>Rate your decision-making quality, not just results</small>
+                        </div>
+                        <div className="form-group">
                             <label className="form-label">Profit/Loss ($)</label>
                             <input type="number" step="0.01" className="form-input" value={sessionForm.profitLoss} onChange={(e) => setSessionForm({...sessionForm, profitLoss: e.target.value})} required placeholder="-15.50 or +25.00" />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Notes (Optional)</label>
-                            <textarea className="form-textarea" value={sessionForm.notes} onChange={(e) => setSessionForm({...sessionForm, notes: e.target.value})} placeholder="Key hands, leaks, observations..." />
+                            <label className="form-label">Notes (Recommended for leak tracking)</label>
+                            <textarea className="form-textarea" value={sessionForm.notes} onChange={(e) => setSessionForm({...sessionForm, notes: e.target.value})} placeholder="Key hands, leaks, how you felt, mistakes..." />
                         </div>
                         <button type="submit" className="btn btn-primary btn-full">Log Session</button>
                     </form>
@@ -375,19 +523,24 @@
                 <div className="card">
                     <div className="card-title">📜 Session History</div>
                     {sessions.length === 0 ? (
-                        <p style={{textAlign: 'center', color: '#666', padding: '40px'}}>No sessions logged yet. Start playing and log your first session!</p>
+                        <p style={{textAlign: 'center', color: '#666', padding: '40px'}}>No sessions yet</p>
                     ) : (
                         <div className="session-list">
                             {sessions.map(session => (
                                 <div key={session.id} className={`session-item ${session.profitLoss >= 0 ? 'profit' : 'loss'}`}>
                                     <div className="session-header">
-                                        <span>{session.platform} {session.stakes}</span>
-                                        <span style={{color: session.profitLoss >= 0 ? '#28a745' : '#dc3545'}}>
-                                            ${session.profitLoss >= 0 ? '+' : ''}{session.profitLoss.toFixed(2)}
-                                        </span>
+                                        <span>{session.platform} {session.stakes} • {session.tables || 1}T • Grade: {session.rating || 'N/A'}</span>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                            <span style={{color: session.profitLoss >= 0 ? '#28a745' : '#dc3545'}}>
+                                                ${session.profitLoss >= 0 ? '+' : ''}{session.profitLoss.toFixed(2)}
+                                            </span>
+                                            <button onClick={() => deleteSession(session.id, session.profitLoss)} style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer'}}>
+                                                🗑️
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="session-details">
-                                        {new Date(session.date).toLocaleString()} • {session.hours}h
+                                        {new Date(session.date).toLocaleString()} • {session.hours}h • ~{Math.round(session.hours * (session.tables || 1) * 60)} hands
                                         {session.notes && <div style={{marginTop: '8px', fontStyle: 'italic'}}>{session.notes}</div>}
                                     </div>
                                 </div>
@@ -397,60 +550,173 @@
                 </div>
             );
 
-            const renderExport = () => (
-                <div className="card">
-                    <div className="card-title">📤 Export/Import Data</div>
-                    <p style={{marginBottom: '20px', color: '#666'}}>
-                        Export your sessions to Excel, CSV, or backup file. Import to restore or transfer data between devices.
-                    </p>
-                    
-                    <div className="alert alert-info">
-                        📊 Total Sessions: {sessions.length}<br/>
-                        💰 Current Bankroll: ${bankroll.toFixed(2)}<br/>
-                        🔥 Days Clean: {daysClean}
+            const renderStats = () => {
+                const platformStats = getStatsByPlatform();
+                const stakesStats = getStatsByStakes();
+                const ratingStats = getStatsByRating();
+
+                return (
+                    <>
+                        <div className="card">
+                            <div className="card-title">📊 Overall Stats</div>
+                            <div className="metric-row">
+                                <span className="metric-label">Total Sessions:</span>
+                                <span className="metric-value">{sessions.length}</span>
+                            </div>
+                            <div className="metric-row">
+                                <span className="metric-label">Total Hours:</span>
+                                <span className="metric-value">{totalHours.toFixed(1)}h</span>
+                            </div>
+                            <div className="metric-row">
+                                <span className="metric-label">Est. Hands Played:</span>
+                                <span className="metric-value">{totalHands.toLocaleString()}</span>
+                            </div>
+                            <div className="metric-row">
+                                <span className="metric-label">Total Profit:</span>
+                                <span className="metric-value" style={{color: totalProfit >= 0 ? '#28a745' : '#dc3545'}}>
+                                    ${totalProfit >= 0 ? '+' : ''}{totalProfit.toFixed(2)}
+                                </span>
+                            </div>
+                            <div className="metric-row">
+                                <span className="metric-label">Hourly Rate:</span>
+                                <span className="metric-value" style={{color: totalHours > 0 && totalProfit / totalHours >= 0 ? '#28a745' : '#dc3545', fontSize: '18px'}}>
+                                    ${totalHours > 0 ? (totalProfit / totalHours).toFixed(2) : '0.00'}/hr
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-title">🎓 Stats by Session Rating</div>
+                            <p style={{color: '#666', marginBottom: '15px', fontSize: '14px'}}>
+                                How your results correlate with your play quality
+                            </p>
+                            {ratingStats.map(r => (
+                                <div key={r.name} className={`stat-box ${parseFloat(r.avgProfit) >= 0 ? 'positive' : 'negative'}`}>
+                                    <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>
+                                        Grade {r.name} {r.name === 'A' && '⭐'} {r.name === 'F' && '⚠️'}
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Sessions:</span>
+                                        <span>{r.sessions}</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Total P/L:</span>
+                                        <span style={{color: r.profit >= 0 ? '#28a745' : '#dc3545'}}>
+                                            ${r.profit >= 0 ? '+' : ''}{r.profit.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span style={{fontWeight: 'bold'}}>Avg per Session:</span>
+                                        <span style={{fontWeight: 'bold', fontSize: '16px', color: r.avgProfit >= 0 ? '#28a745' : '#dc3545'}}>
+                                            ${r.avgProfit >= 0 ? '+' : ''}{r.avgProfit}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                            {ratingStats.length > 0 && (
+                                <div style={{marginTop: '15px', padding: '12px', background: '#e7f3ff', borderRadius: '8px', fontSize: '14px'}}>
+                                    <strong>💡 Insight:</strong> Compare your A-game vs C-game results. If A-rated sessions are more profitable, focus on playing only when you can bring your A-game!
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="card">
+                            <div className="card-title">💻 By Platform</div>
+                            {platformStats.map(p => (
+                                <div key={p.name} className={`stat-box ${parseFloat(p.hourly) >= 0 ? 'positive' : 'negative'}`}>
+                                    <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>{p.name}</div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Hourly:</span>
+                                        <span style={{fontWeight: 'bold', fontSize: '16px'}}>${p.hourly}/hr</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Profit:</span>
+                                        <span>${p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Hours / Sessions:</span>
+                                        <span>{p.hours.toFixed(1)}h / {p.sessions}</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Est. Hands:</span>
+                                        <span>{p.hands.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="card">
+                            <div className="card-title">🎯 By Stakes</div>
+                            {stakesStats.map(s => (
+                                <div key={s.name} className={`stat-box ${parseFloat(s.hourly) >= 0 ? 'positive' : 'negative'}`}>
+                                    <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>{s.name}</div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Hourly:</span>
+                                        <span style={{fontWeight: 'bold', fontSize: '16px'}}>${s.hourly}/hr</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Profit:</span>
+                                        <span>${s.profit >= 0 ? '+' : ''}{s.profit.toFixed(2)}</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Hours / Sessions:</span>
+                                        <span>{s.hours.toFixed(1)}h / {s.sessions}</span>
+                                    </div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                        <span>Est. Hands:</span>
+                                        <span>{s.hands.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                );
+            };
+
+            const renderLeaks = () => {
+                const leaks = getLeaks();
+                return (
+                    <div className="card">
+                        <div className="card-title">⚠️ Leak Tracker</div>
+                        <p style={{color: '#666', marginBottom: '15px'}}>Common words in your notes (potential leaks):</p>
+                        {leaks.length === 0 ? (
+                            <p style={{textAlign: 'center', color: '#666', padding: '20px'}}>No patterns yet. Add notes to track leaks!</p>
+                        ) : (
+                            leaks.map(([word, count]) => (
+                                <div key={word} className="leak-item">
+                                    <span className="leak-count">{count}x</span>
+                                    <strong>{word}</strong>
+                                </div>
+                            ))
+                        )}
                     </div>
+                );
+            };
 
-                    <h3 style={{marginTop: '20px', marginBottom: '10px', color: '#1e3c72'}}>📥 Export Options</h3>
-                    
-                    <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={sessions.length === 0}>
-                        📄 Export to CSV (Excel Compatible)
-                    </button>
-                    
-                    <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={sessions.length === 0}>
-                        📊 Export to Excel (XLSX)
-                    </button>
-                    
-                    <button className="btn btn-success btn-full" onClick={exportBackup}>
-                        💾 Export Complete Backup (JSON)
-                    </button>
-
-                    <h3 style={{marginTop: '30px', marginBottom: '10px', color: '#1e3c72'}}>📤 Import Data</h3>
-                    
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="file-input"
-                        accept=".json"
-                        onChange={importData}
-                    />
-                    
-                    <button className="btn btn-primary btn-full" onClick={() => fileInputRef.current.click()}>
-                        📁 Import from Backup File
-                    </button>
-
-                    {sessions.length === 0 && (
-                        <div className="alert alert-warning" style={{marginTop: '20px'}}>
-                            ⚠️ No sessions to export yet. Log some sessions first!
+            const renderGraph = () => (
+                <div className="card">
+                    <div className="card-title">📈 Bankroll Graph</div>
+                    {sessions.length === 0 ? (
+                        <p style={{textAlign: 'center', color: '#666', padding: '40px'}}>Log sessions to see your bankroll graph</p>
+                    ) : (
+                        <div className="chart-container">
+                            <canvas ref={chartRef}></canvas>
                         </div>
                     )}
+                </div>
+            );
 
-                    <div style={{marginTop: '30px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', fontSize: '14px', color: '#666'}}>
-                        <strong>💡 Tips:</strong><br/>
-                        • CSV files open in Excel, Numbers, Google Sheets<br/>
-                        • XLSX files are native Excel format with formatting<br/>
-                        • JSON backups preserve all data for re-importing<br/>
-                        • Use import to transfer data between devices
+            const renderExport = () => (
+                <div className="card">
+                    <div className="card-title">📤 Export/Import</div>
+                    <div className="alert alert-info">
+                        📊 Sessions: {sessions.length} • 💰 Bankroll: ${bankroll.toFixed(2)} • 🔥 Days: {daysClean}
                     </div>
+                    <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={!sessions.length}>📄 Export to CSV</button>
+                    <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={!sessions.length}>📊 Export to Excel</button>
+                    <button className="btn btn-success btn-full" onClick={exportBackup}>💾 Export Backup</button>
+                    <input type="file" ref={fileInputRef} className="file-input" accept=".json" onChange={importData} />
+                    <button className="btn btn-primary btn-full" onClick={() => fileInputRef.current.click()}>📁 Import Backup</button>
                 </div>
             );
 
@@ -458,19 +724,25 @@
                 <div className="app-container">
                     <div className="header">
                         <h1>🎯 Poker Rebuild Tracker</h1>
-                        <div className="mission">THE TRIPLE-UP MISSION</div>
+                        <div className="mission">TRIPLE-UP MISSION</div>
                     </div>
                     <div className="tabs">
                         <button className={`tab ${currentTab === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentTab('dashboard')}>Dashboard</button>
                         <button className={`tab ${currentTab === 'checklist' ? 'active' : ''}`} onClick={() => setCurrentTab('checklist')}>Pre-Check</button>
-                        <button className={`tab ${currentTab === 'log' ? 'active' : ''}`} onClick={() => setCurrentTab('log')}>Log Session</button>
+                        <button className={`tab ${currentTab === 'log' ? 'active' : ''}`} onClick={() => setCurrentTab('log')}>Log</button>
                         <button className={`tab ${currentTab === 'history' ? 'active' : ''}`} onClick={() => setCurrentTab('history')}>History</button>
+                        <button className={`tab ${currentTab === 'stats' ? 'active' : ''}`} onClick={() => setCurrentTab('stats')}>Stats</button>
+                        <button className={`tab ${currentTab === 'leaks' ? 'active' : ''}`} onClick={() => setCurrentTab('leaks')}>Leaks</button>
+                        <button className={`tab ${currentTab === 'graph' ? 'active' : ''}`} onClick={() => setCurrentTab('graph')}>Graph</button>
                         <button className={`tab ${currentTab === 'export' ? 'active' : ''}`} onClick={() => setCurrentTab('export')}>Export</button>
                     </div>
                     {currentTab === 'dashboard' && renderDashboard()}
                     {currentTab === 'checklist' && renderChecklist()}
                     {currentTab === 'log' && renderLogSession()}
                     {currentTab === 'history' && renderHistory()}
+                    {currentTab === 'stats' && renderStats()}
+                    {currentTab === 'leaks' && renderLeaks()}
+                    {currentTab === 'graph' && renderGraph()}
                     {currentTab === 'export' && renderExport()}
                 </div>
             );
