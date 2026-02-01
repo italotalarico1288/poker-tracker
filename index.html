@@ -820,13 +820,14 @@
                         <div className="alert alert-info">
                             📊 Sessions: {sessions.length} • 💰 Bankroll: ${totalBankroll.toFixed(2)} • 🔥 Days: {daysClean}
                         </div>
-                    <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={!sessions.length}>📄 Export to CSV</button>
-                    <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={!sessions.length}>📊 Export to Excel</button>
-                    <button className="btn btn-success btn-full" onClick={exportBackup}>💾 Export Backup</button>
-                    <input type="file" ref={fileInputRef} className="file-input" accept=".json" onChange={importData} />
-                    <button className="btn btn-primary btn-full" onClick={() => fileInputRef.current.click()}>📁 Import Backup</button>
-                </div>
-            );
+                        <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={!sessions.length}>📄 Export to CSV</button>
+                        <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={!sessions.length}>📊 Export to Excel</button>
+                        <button className="btn btn-success btn-full" onClick={exportBackup}>💾 Export Backup</button>
+                        <input type="file" ref={fileInputRef} className="file-input" accept=".json" onChange={importData} />
+                        <button className="btn btn-primary btn-full" onClick={() => fileInputRef.current.click()}>📁 Import Backup</button>
+                    </div>
+                );
+            };
 
             return (
                 <div className="app-container">
