@@ -367,7 +367,7 @@
             };
 
             const exportBackup = () => {
-                const data = { bankroll, daysClean, sessions, exportDate: new Date().toISOString() };
+                const data = { bankrolls, daysClean, sessions, exportDate: new Date().toISOString() };
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -384,7 +384,20 @@
                     try {
                         const data = JSON.parse(event.target.result);
                         if (window.confirm(`Import ${data.sessions?.length || 0} sessions?`)) {
-                            setBankroll(data.bankroll || 518);
+                            // Handle both old (single bankroll) and new (separate bankrolls) formats
+                            if (data.bankrolls) {
+                                setBankrolls(data.bankrolls);
+                            } else if (data.bankroll) {
+                                setBankrolls({
+                                    CoinPoker: data.bankroll / 2,
+                                    ClubWPT: data.bankroll / 2
+                                });
+                            } else {
+                                setBankrolls({
+                                    CoinPoker: 250.36,
+                                    ClubWPT: 268.10
+                                });
+                            }
                             setDaysClean(data.daysClean || 0);
                             setSessions(data.sessions || []);
                             alert('Data imported successfully!');
@@ -440,8 +453,8 @@
                                 <div style={{marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #ddd'}}>
                                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
                                         <div>
-                                            <div style={{fontSize: '14px', color: '#666'}}>CoinPoker:</div>
-                                            <div style={{fontSize: '18px', fontWeight: 'bold', color: '#1a73e8'}}>${bankrolls.CoinPoker.toFixed(2)}</div>
+                                            <div style={{fontSize: '16px', fontWeight: '600', color: '#1a73e8', marginBottom: '4px'}}>CoinPoker: ${bankrolls.CoinPoker.toFixed(2)}</div>
+                                            <div style={{fontSize: '12px', color: '#999'}}>Started $250.36</div>
                                         </div>
                                         <div style={{display: 'flex', gap: '5px'}}>
                                             <button 
@@ -456,8 +469,8 @@
                                     </div>
                                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                         <div>
-                                            <div style={{fontSize: '14px', color: '#666'}}>ClubWPT:</div>
-                                            <div style={{fontSize: '18px', fontWeight: 'bold', color: '#e91e63'}}>${bankrolls.ClubWPT.toFixed(2)}</div>
+                                            <div style={{fontSize: '16px', fontWeight: '600', color: '#e91e63', marginBottom: '4px'}}>ClubWPT: ${bankrolls.ClubWPT.toFixed(2)}</div>
+                                            <div style={{fontSize: '12px', color: '#999'}}>Started $268.10</div>
                                         </div>
                                         <div style={{display: 'flex', gap: '5px'}}>
                                             <button 
@@ -470,9 +483,6 @@
                                             >+$10</button>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="stat-label" style={{marginTop: '10px'}}>
-                                    Started: CoinPoker $250.36 • ClubWPT $268.10
                                 </div>
                             </div>
                             <div className="card">
@@ -536,18 +546,21 @@
                 </div>
             );
 
-            const renderLogSession = () => (
-                <div className="card">
-                    <div className="card-title">📝 Log Session</div>
-                    {sessionForm.stakes === 'NL10' && bankroll < 1036 && (
-                        <div className="alert alert-warning">
-                            ⚠️ NL10 GOAL: Need $1,036 (DOUBLED). You're ${(1036 - bankroll).toFixed(2)} away.<br/>
-                            Stay at NL2/NL5 until you DOUBLE.
-                        </div>
-                    )}
-                    {sessionForm.stakes === 'NL10' && bankroll >= 1036 && (
-                        <div className="alert alert-success">✅ DOUBLED! Ready for NL10!</div>
-                    )}
+            const renderLogSession = () => {
+                const totalBankroll = bankrolls.CoinPoker + bankrolls.ClubWPT;
+                
+                return (
+                    <div className="card">
+                        <div className="card-title">📝 Log Session</div>
+                        {sessionForm.stakes === 'NL10' && totalBankroll < 1036 && (
+                            <div className="alert alert-warning">
+                                ⚠️ NL10 GOAL: Need $1,036 (DOUBLED). You're ${(1036 - totalBankroll).toFixed(2)} away.<br/>
+                                Stay at NL2/NL5 until you DOUBLE.
+                            </div>
+                        )}
+                        {sessionForm.stakes === 'NL10' && totalBankroll >= 1036 && (
+                            <div className="alert alert-success">✅ DOUBLED! Ready for NL10!</div>
+                        )}
                     <form onSubmit={handleSessionSubmit}>
                         <div className="form-group">
                             <label className="form-label">Platform</label>
@@ -595,7 +608,8 @@
                         <button type="submit" className="btn btn-primary btn-full">Log Session</button>
                     </form>
                 </div>
-            );
+                );
+            };
 
             const renderHistory = () => (
                 <div className="card">
@@ -797,12 +811,15 @@
                 </div>
             );
 
-            const renderExport = () => (
-                <div className="card">
-                    <div className="card-title">📤 Export/Import</div>
-                    <div className="alert alert-info">
-                        📊 Sessions: {sessions.length} • 💰 Bankroll: ${bankroll.toFixed(2)} • 🔥 Days: {daysClean}
-                    </div>
+            const renderExport = () => {
+                const totalBankroll = bankrolls.CoinPoker + bankrolls.ClubWPT;
+                
+                return (
+                    <div className="card">
+                        <div className="card-title">📤 Export/Import</div>
+                        <div className="alert alert-info">
+                            📊 Sessions: {sessions.length} • 💰 Bankroll: ${totalBankroll.toFixed(2)} • 🔥 Days: {daysClean}
+                        </div>
                     <button className="btn btn-primary btn-full" onClick={exportToCSV} disabled={!sessions.length}>📄 Export to CSV</button>
                     <button className="btn btn-primary btn-full" onClick={exportToExcel} disabled={!sessions.length}>📊 Export to Excel</button>
                     <button className="btn btn-success btn-full" onClick={exportBackup}>💾 Export Backup</button>
