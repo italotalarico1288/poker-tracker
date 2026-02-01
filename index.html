@@ -81,7 +81,10 @@
 
         function PokerTracker() {
             const [currentTab, setCurrentTab] = useState('dashboard');
-            const [bankroll, setBankroll] = useState(518);
+            const [bankrolls, setBankrolls] = useState({
+                CoinPoker: 250.36,
+                ClubWPT: 268.10
+            });
             const [daysClean, setDaysClean] = useState(30);
             const [sessions, setSessions] = useState([]);
             const [todayTotal, setTodayTotal] = useState(0);
@@ -100,15 +103,28 @@
                 const saved = localStorage.getItem('pokerTrackerData');
                 if (saved) {
                     const data = JSON.parse(saved);
-                    setBankroll(data.bankroll || 518);
+                    // Handle migration from old single bankroll to new multi-bankroll
+                    if (data.bankrolls) {
+                        setBankrolls(data.bankrolls);
+                    } else if (data.bankroll) {
+                        // Migrate old data: split evenly between platforms
+                        setBankrolls({
+                            CoinPoker: data.bankroll / 2,
+                            ClubWPT: data.bankroll / 2
+                        });
+                    }
                     setDaysClean(data.daysClean || 30);
                     setSessions(data.sessions || []);
                 }
             }, []);
 
             useEffect(() => {
-                localStorage.setItem('pokerTrackerData', JSON.stringify({ bankroll, daysClean, sessions }));
-            }, [bankroll, daysClean, sessions]);
+                localStorage.setItem('pokerTrackerData', JSON.stringify({ 
+                    bankrolls, 
+                    daysClean, 
+                    sessions 
+                }));
+            }, [bankrolls, daysClean, sessions]);
 
             useEffect(() => {
                 const today = new Date().toDateString();
@@ -152,7 +168,13 @@
                     rating: sessionForm.rating
                 };
                 setSessions(prev => [newSession, ...prev]);
-                setBankroll(prev => prev + profitLoss);
+                
+                // Update the correct platform's bankroll
+                setBankrolls(prev => ({
+                    ...prev,
+                    [sessionForm.platform]: prev[sessionForm.platform] + profitLoss
+                }));
+                
                 setSessionForm({ platform: 'CoinPoker', stakes: 'NL5', hours: '', profitLoss: '', notes: '', tables: '1', rating: 'B' });
                 setChecklistAnswers({ rested: false, calm: false, noBetting: false, canWalk: false });
                 setCurrentTab('dashboard');
@@ -163,10 +185,13 @@
                 if (window.confirm('Are you sure you want to reset days clean?')) setDaysClean(0);
             };
 
-            const deleteSession = (sessionId, profitLoss) => {
+            const deleteSession = (sessionId, profitLoss, platform) => {
                 if (window.confirm('Delete this session? This will adjust your bankroll.')) {
                     setSessions(prev => prev.filter(s => s.id !== sessionId));
-                    setBankroll(prev => prev - profitLoss);
+                    setBankrolls(prev => ({
+                        ...prev,
+                        [platform]: prev[platform] - profitLoss
+                    }));
                 }
             };
 
@@ -178,8 +203,9 @@
                 }
 
                 const sortedSessions = [...sessions].reverse();
-                let runningBankroll = 518;
-                const data = [{x: new Date(Date.now() - 30*24*60*60*1000), y: 518}];
+                const startingTotal = 518.46;
+                let runningBankroll = startingTotal;
+                const data = [{x: new Date(Date.now() - 30*24*60*60*1000), y: startingTotal}];
                 
                 sortedSessions.forEach(s => {
                     runningBankroll += s.profitLoss;
@@ -236,6 +262,7 @@
                 return Object.entries(platforms).map(([name, data]) => ({
                     name,
                     ...data,
+                    currentBankroll: bankrolls[name] || 0,
                     hourly: data.hours > 0 ? (data.profit / data.hours).toFixed(2) : 0
                 }));
             };
@@ -325,7 +352,9 @@
                     [],
                     ['Summary'],
                     ['Total Sessions', sessions.length],
-                    ['Current Bankroll', bankroll],
+                    ['Total Bankroll', (bankrolls.CoinPoker + bankrolls.ClubWPT).toFixed(2)],
+                    ['CoinPoker Bankroll', bankrolls.CoinPoker.toFixed(2)],
+                    ['ClubWPT Bankroll', bankrolls.ClubWPT.toFixed(2)],
                     ['Days Clean', daysClean],
                     ['Total Profit/Loss', sessions.reduce((sum, s) => sum + s.profitLoss, 0).toFixed(2)],
                     ['Total Hours', sessions.reduce((sum, s) => sum + s.hours, 0).toFixed(1)],
@@ -372,7 +401,9 @@
                 { name: 'DOUBLE', target: 1036 },
                 { name: 'TRIPLE', target: 1554 }
             ];
-            const progressPercent = ((bankroll - 518) / (1554 - 518)) * 100;
+            
+            const totalBankroll = bankrolls.CoinPoker + bankrolls.ClubWPT;
+            const progressPercent = ((totalBankroll - 518.46) / (1554 - 518.46)) * 100;
 
             const getAlerts = () => {
                 const alerts = [];
@@ -387,50 +418,95 @@
             const totalHours = sessions.reduce((sum, s) => sum + s.hours, 0);
             const totalProfit = sessions.reduce((sum, s) => sum + s.profitLoss, 0);
 
-            const renderDashboard = () => (
-                <>
-                    {getAlerts().map((alert, i) => (
-                        <div key={i} className={`alert alert-${alert.type}`}>{alert.message}</div>
-                    ))}
-                    <div className="grid">
-                        <div className="card">
-                            <div className="card-title">💰 Bankroll</div>
-                            <div className="stat-large">${bankroll.toFixed(2)}</div>
-                            <div className="stat-label">Started: $518</div>
-                        </div>
-                        <div className="card">
-                            <div className="card-title">🔥 Days Clean</div>
-                            <div className="stat-large">{daysClean}</div>
-                            <div className="stat-label">No sports/casino</div>
-                            <button className="btn btn-success btn-full" onClick={incrementDaysClean}>+1 Day Clean</button>
-                            <button className="btn btn-danger btn-full" onClick={resetDaysClean}>Reset</button>
-                        </div>
-                        <div className="card">
-                            <div className="card-title">📊 Today's P/L</div>
-                            <div className="stat-large" style={{color: todayTotal >= 0 ? '#28a745' : '#dc3545'}}>
-                                ${todayTotal >= 0 ? '+' : ''}{todayTotal.toFixed(2)}
-                            </div>
-                            <div className="stat-label">
-                                {todayTotal <= -20 ? '🛑 STOP' : `$${Math.abs(20 + todayTotal).toFixed(2)} to stop`}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="card">
-                        <div className="card-title">🏆 Milestone Progress</div>
-                        <div className="progress-bar">
-                            <div className="progress-fill" style={{width: `${Math.min(progressPercent, 100)}%`}}>
-                                {progressPercent.toFixed(0)}%
-                            </div>
-                        </div>
-                        {milestones.map(m => (
-                            <div key={m.name} className={`milestone-item ${bankroll >= m.target ? 'achieved' : ''}`}>
-                                <span>{m.name}</span>
-                                <span>${m.target} {bankroll >= m.target && '✓'}</span>
-                            </div>
+            const renderDashboard = () => {
+                const totalBankroll = bankrolls.CoinPoker + bankrolls.ClubWPT;
+                
+                const adjustBankroll = (platform, amount) => {
+                    setBankrolls(prev => ({
+                        ...prev,
+                        [platform]: Math.max(0, prev[platform] + amount)
+                    }));
+                };
+                
+                return (
+                    <>
+                        {getAlerts().map((alert, i) => (
+                            <div key={i} className={`alert alert-${alert.type}`}>{alert.message}</div>
                         ))}
-                    </div>
-                </>
-            );
+                        <div className="grid">
+                            <div className="card">
+                                <div className="card-title">💰 Total Bankroll</div>
+                                <div className="stat-large">${totalBankroll.toFixed(2)}</div>
+                                <div style={{marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #ddd'}}>
+                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                                        <div>
+                                            <div style={{fontSize: '14px', color: '#666'}}>CoinPoker:</div>
+                                            <div style={{fontSize: '18px', fontWeight: 'bold', color: '#1a73e8'}}>${bankrolls.CoinPoker.toFixed(2)}</div>
+                                        </div>
+                                        <div style={{display: 'flex', gap: '5px'}}>
+                                            <button 
+                                                onClick={() => adjustBankroll('CoinPoker', -10)}
+                                                style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px'}}
+                                            >-$10</button>
+                                            <button 
+                                                onClick={() => adjustBankroll('CoinPoker', 10)}
+                                                style={{background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px'}}
+                                            >+$10</button>
+                                        </div>
+                                    </div>
+                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <div>
+                                            <div style={{fontSize: '14px', color: '#666'}}>ClubWPT:</div>
+                                            <div style={{fontSize: '18px', fontWeight: 'bold', color: '#e91e63'}}>${bankrolls.ClubWPT.toFixed(2)}</div>
+                                        </div>
+                                        <div style={{display: 'flex', gap: '5px'}}>
+                                            <button 
+                                                onClick={() => adjustBankroll('ClubWPT', -10)}
+                                                style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px'}}
+                                            >-$10</button>
+                                            <button 
+                                                onClick={() => adjustBankroll('ClubWPT', 10)}
+                                                style={{background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px'}}
+                                            >+$10</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="stat-label" style={{marginTop: '10px'}}>Started: $518.46 total</div>
+                            </div>
+                            <div className="card">
+                                <div className="card-title">🔥 Days Clean</div>
+                                <div className="stat-large">{daysClean}</div>
+                                <div className="stat-label">No sports/casino</div>
+                                <button className="btn btn-success btn-full" onClick={incrementDaysClean}>+1 Day Clean</button>
+                                <button className="btn btn-danger btn-full" onClick={resetDaysClean}>Reset</button>
+                            </div>
+                            <div className="card">
+                                <div className="card-title">📊 Today's P/L</div>
+                                <div className="stat-large" style={{color: todayTotal >= 0 ? '#28a745' : '#dc3545'}}>
+                                    ${todayTotal >= 0 ? '+' : ''}{todayTotal.toFixed(2)}
+                                </div>
+                                <div className="stat-label">
+                                    {todayTotal <= -20 ? '🛑 STOP' : `$${Math.abs(20 + todayTotal).toFixed(2)} to stop`}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="card">
+                            <div className="card-title">🏆 Milestone Progress</div>
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{width: `${Math.min(progressPercent, 100)}%`}}>
+                                    {progressPercent.toFixed(0)}%
+                                </div>
+                            </div>
+                            {milestones.map(m => (
+                                <div key={m.name} className={`milestone-item ${totalBankroll >= m.target ? 'achieved' : ''}`}>
+                                    <span>{m.name}</span>
+                                    <span>${m.target} {totalBankroll >= m.target && '✓'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                );
+            };
 
             const renderChecklist = () => (
                 <div className="card">
@@ -534,7 +610,7 @@
                                             <span style={{color: session.profitLoss >= 0 ? '#28a745' : '#dc3545'}}>
                                                 ${session.profitLoss >= 0 ? '+' : ''}{session.profitLoss.toFixed(2)}
                                             </span>
-                                            <button onClick={() => deleteSession(session.id, session.profitLoss)} style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer'}}>
+                                            <button onClick={() => deleteSession(session.id, session.profitLoss, session.platform)} style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer'}}>
                                                 🗑️
                                             </button>
                                         </div>
@@ -625,6 +701,10 @@
                             {platformStats.map(p => (
                                 <div key={p.name} className={`stat-box ${parseFloat(p.hourly) >= 0 ? 'positive' : 'negative'}`}>
                                     <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>{p.name}</div>
+                                    <div className="metric-row" style={{padding: '5px 0', border: 'none', background: '#f8f9fa', borderRadius: '4px', margin: '5px 0'}}>
+                                        <span style={{fontWeight: 'bold'}}>Current Bankroll:</span>
+                                        <span style={{fontWeight: 'bold', fontSize: '16px', color: p.name === 'CoinPoker' ? '#1a73e8' : '#e91e63'}}>${p.currentBankroll.toFixed(2)}</span>
+                                    </div>
                                     <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
                                         <span>Hourly:</span>
                                         <span style={{fontWeight: 'bold', fontSize: '16px'}}>${p.hourly}/hr</span>
