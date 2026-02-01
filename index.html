@@ -471,7 +471,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div className="stat-label" style={{marginTop: '10px'}}>Started: $518.46 total</div>
+                                <div className="stat-label" style={{marginTop: '10px'}}>
+                                    Started: CoinPoker $250.36 • ClubWPT $268.10
+                                </div>
                             </div>
                             <div className="card">
                                 <div className="card-title">🔥 Days Clean</div>
@@ -698,31 +700,40 @@
 
                         <div className="card">
                             <div className="card-title">💻 By Platform</div>
-                            {platformStats.map(p => (
-                                <div key={p.name} className={`stat-box ${parseFloat(p.hourly) >= 0 ? 'positive' : 'negative'}`}>
-                                    <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>{p.name}</div>
-                                    <div className="metric-row" style={{padding: '5px 0', border: 'none', background: '#f8f9fa', borderRadius: '4px', margin: '5px 0'}}>
-                                        <span style={{fontWeight: 'bold'}}>Current Bankroll:</span>
-                                        <span style={{fontWeight: 'bold', fontSize: '16px', color: p.name === 'CoinPoker' ? '#1a73e8' : '#e91e63'}}>${p.currentBankroll.toFixed(2)}</span>
+                            {platformStats.map(p => {
+                                const startingBankroll = p.name === 'CoinPoker' ? 250.36 : 268.10;
+                                const netChange = p.currentBankroll - startingBankroll;
+                                
+                                return (
+                                    <div key={p.name} className={`stat-box ${parseFloat(p.hourly) >= 0 ? 'positive' : 'negative'}`}>
+                                        <div style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px'}}>{p.name}</div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none', background: '#f8f9fa', borderRadius: '4px', margin: '5px 0'}}>
+                                            <span style={{fontWeight: 'bold'}}>Current Bankroll:</span>
+                                            <span style={{fontWeight: 'bold', fontSize: '16px', color: p.name === 'CoinPoker' ? '#1a73e8' : '#e91e63'}}>${p.currentBankroll.toFixed(2)}</span>
+                                        </div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none', fontSize: '13px', color: '#666'}}>
+                                            <span>Started:</span>
+                                            <span>${startingBankroll.toFixed(2)} ({netChange >= 0 ? '+' : ''}{netChange.toFixed(2)})</span>
+                                        </div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                            <span>Hourly:</span>
+                                            <span style={{fontWeight: 'bold', fontSize: '16px'}}>${p.hourly}/hr</span>
+                                        </div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                            <span>Profit:</span>
+                                            <span>${p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</span>
+                                        </div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                            <span>Hours / Sessions:</span>
+                                            <span>{p.hours.toFixed(1)}h / {p.sessions}</span>
+                                        </div>
+                                        <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
+                                            <span>Est. Hands:</span>
+                                            <span>{p.hands.toLocaleString()}</span>
+                                        </div>
                                     </div>
-                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
-                                        <span>Hourly:</span>
-                                        <span style={{fontWeight: 'bold', fontSize: '16px'}}>${p.hourly}/hr</span>
-                                    </div>
-                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
-                                        <span>Profit:</span>
-                                        <span>${p.profit >= 0 ? '+' : ''}{p.profit.toFixed(2)}</span>
-                                    </div>
-                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
-                                        <span>Hours / Sessions:</span>
-                                        <span>{p.hours.toFixed(1)}h / {p.sessions}</span>
-                                    </div>
-                                    <div className="metric-row" style={{padding: '5px 0', border: 'none'}}>
-                                        <span>Est. Hands:</span>
-                                        <span>{p.hands.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div className="card">
